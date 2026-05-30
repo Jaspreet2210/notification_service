@@ -8,7 +8,7 @@ To make this fun and easy to test, the project includes an **interactive dark-mo
 
 ---
 
-## 🚀 Cool Features Included
+## 🚀 Features Included
 
 *   **Multi-Channel Support:** Dynamically routes messages to Email, SMS, or In-App destinations.
 *   **Real-Time Dashboard:** Open `http://localhost:8080` to see a premium dashboard showing live analytics, status counters, and a scrolling activity terminal.
