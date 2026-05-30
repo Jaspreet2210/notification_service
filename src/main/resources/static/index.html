@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Core | Control Center</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="background-gradients">
+        <div class="glow-sphere glow-1"></div>
+        <div class="glow-sphere glow-2"></div>
+        <div class="glow-sphere glow-3"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo">
+                <i class="fa-solid fa-satellite-dish brand-icon"></i>
+                <div class="brand-text">
+                    <h1>Notification Core</h1>
+                    <span>Control Center v1.0</span>
+                </div>
+            </div>
+            <div class="system-status">
+                <span class="status-indicator online"></span>
+                <span class="status-label">Engine Online</span>
+            </div>
+        </header>
+
+        <!-- Global Outage Warning -->
+        <div id="outageBanner" class="outage-banner hidden">
+            <i class="fa-solid fa-triangle-exclamation pulse"></i>
+            <span>PROVIDER SERVICE OUTAGE ACTIVATED: Failure injection is active. Notifications will queue and retry
+                with exponential backoff.</span>
+        </div>
+
+        <!-- Main Dashboard Layout -->
+        <main class="dashboard-grid">
+
+            <!-- COLUMN 1: CONTROLS & COMPOSITION -->
+            <section class="grid-col-left">
+                <!-- Composer Card -->
+                <div class="glass-card composer-card">
+                    <div class="card-header">
+                        <i class="fa-solid fa-paper-plane card-icon"></i>
+                        <h2>Dispatch Notification</h2>
+                    </div>
+                    <form id="notificationForm" class="composer-form">
+                        <!-- Idempotency Settings -->
+                        <div class="form-group">
+                            <label for="idempotencyKey">
+                                <span>Idempotency Key</span>
+                                <span class="badge info">Enforces Duplicate Prevention</span>
+                            </label>
+                            <div class="idempotency-input-wrapper">
+                                <input type="text" id="idempotencyKey" placeholder="Click generate or enter a key"
+                                    required autocomplete="off">
+                                <button type="button" id="btnGenKey" class="btn btn-secondary"
+                                    title="Generate new UUID">
+                                    <i class="fa-solid fa-rotate"></i> Gen
+                                </button>
+                            </div>
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="chkAutoKey" checked>
+                                <label for="chkAutoKey">Rotate key automatically after sending</label>
+                            </div>
+                        </div>
+
+                        <!-- Channel Select -->
+                        <div class="form-group">
+                            <label>Delivery Channel</label>
+                            <div class="channel-selector">
+                                <input type="radio" name="channel" value="EMAIL" id="chanEmail" checked>
+                                <label for="chanEmail">
+                                    <i class="fa-regular fa-envelope"></i>
+                                    <span>Email</span>
+                                </label>
+
+                                <input type="radio" name="channel" value="SMS" id="chanSms">
+                                <label for="chanSms">
+                                    <i class="fa-solid fa-comment-sms"></i>
+                                    <span>SMS</span>
+                                </label>
+
+                                <input type="radio" name="channel" value="IN_APP" id="chanInApp">
+                                <label for="chanInApp">
+                                    <i class="fa-solid fa-mobile-screen-button"></i>
+                                    <span>In-App</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Recipient -->
+                        <div class="form-group">
+                            <label for="recipient" id="lblRecipient">Recipient Email</label>
+                            <input type="text" id="recipient" placeholder="user@example.com" required
+                                autocomplete="off">
+                        </div>
+
+                        <!-- Title -->
+                        <div class="form-group">
+                            <label for="title">Title</label>
+                            <input type="text" id="title" placeholder="Welcome aboard!" required autocomplete="off">
+                        </div>
+
+                        <!-- Content -->
+                        <div class="form-group">
+                            <label for="content">Message Payload</label>
+                            <textarea id="content" rows="4" placeholder="Type your message content here..."
+                                required></textarea>
+                        </div>
+
+                        <button type="submit" id="btnSubmit" class="btn btn-primary">
+                            <i class="fa-solid fa-paper-plane"></i> Dispatch Asynchronously
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Simulation Settings Card -->
+                <div class="glass-card simulation-card">
+                    <div class="card-header">
+                        <i class="fa-solid fa-sliders card-icon"></i>
+                        <h2>Resilience Sandbox</h2>
+                    </div>
+                    <div class="sandbox-controls">
+                        <div class="control-row">
+                            <div class="control-text">
+                                <h3>Simulate Provider Outage</h3>
+                                <p>Forces external services (SendGrid/Twilio/FCM) to go offline, triggering the retry
+                                    engine.</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="outageToggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- COLUMN 2: ANALYTICS & EVENT FEED -->
+            <section class="grid-col-right">
+
+                <!-- Metrics Bar -->
+                <div class="metrics-grid">
+                    <div class="metric-card glass-card">
+                        <div class="metric-icon success"><i class="fa-solid fa-circle-check"></i></div>
+                        <div class="metric-info">
+                            <span class="metric-value" id="statSuccess">0</span>
+                            <span class="metric-label">Delivered</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card glass-card">
+                        <div class="metric-icon retry"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                        <div class="metric-info">
+                            <span class="metric-value" id="statRetry">0</span>
+                            <span class="metric-label">Active Retries</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card glass-card">
+                        <div class="metric-icon failure"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div class="metric-info">
+                            <span class="metric-value" id="statFailure">0</span>
+                            <span class="metric-label">Hard Failures</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card glass-card">
+                        <div class="metric-icon success-rate"><i class="fa-solid fa-percent"></i></div>
+                        <div class="metric-info">
+                            <span class="metric-value" id="statSuccessRate">0%</span>
+                            <span class="metric-label">Success Rate</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event Stream Terminal -->
+                <div class="glass-card event-terminal-card">
+                    <div class="card-header">
+                        <div class="header-left">
+                            <i class="fa-solid fa-terminal card-icon"></i>
+                            <h2>System Event Stream (SSE)</h2>
+                        </div>
+                        <span class="badge live-pulse">Live</span>
+                    </div>
+                    <div class="terminal-body" id="eventLogs">
+                        <div class="log-line system-line">[System] Establishing connection to SSE event stream...</div>
+                    </div>
+                </div>
+
+                <!-- History Table Card -->
+                <div class="glass-card history-card">
+                    <div class="card-header">
+                        <i class="fa-solid fa-list card-icon"></i>
+                        <h2>Delivery Outbox History</h2>
+                    </div>
+                    <div class="table-container">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Channel</th>
+                                    <th>Recipient</th>
+                                    <th>Attempts</th>
+                                    <th>Status</th>
+                                    <th>Next Scheduled Try</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                                <tr id="noDataRow">
+                                    <td colspan="6" class="no-data">No notifications sent yet. Use the dispatch tool
+                                        above!</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Notification Details Modal -->
+    <div id="detailsModal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-circle-info"></i> Notification Payload Details</h3>
+                <span class="close-modal" id="btnCloseModal">&times;</span>
+            </div>
+            <div class="modal-body" id="modalDetailsBody">
+                <!-- Injected via JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+</body>
+
+</html>

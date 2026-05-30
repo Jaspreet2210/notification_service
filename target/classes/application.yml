@@ -1,0 +1,37 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: notification-service
+  datasource:
+    url: jdbc:h2:mem:notificationdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+# Custom Configuration for Notification Reliability Engine
+notification:
+  retry:
+    max-attempts: 3
+    initial-delay-ms: 1000  # Initial retry delay (1 second)
+    multiplier: 2.0         # Exponential multiplier (1s, 2s, 4s...)
+  provider:
+    simulate-outage: false  # Toggled via Dashboard to simulate 100% provider failure
+    failure-rate: 0.3       # Transient failure probability (30%) under normal operation
+    min-latency-ms: 300     # Minimum mock sending delay
+    max-latency-ms: 1000    # Maximum mock sending delay
